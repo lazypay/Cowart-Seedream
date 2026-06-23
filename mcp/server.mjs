@@ -912,6 +912,24 @@ function timestampSlug(date = new Date()) {
   );
 }
 
+function assertUsablePrompt(prompt) {
+  const compact = prompt.replace(/\s+/g, " ").trim();
+  const lower = compact.toLowerCase();
+  const questionMarks = (compact.match(/\?/g) || []).length;
+  const visibleChars = compact.replace(/\s/g, "").length;
+  const looksLikeHolderPlaceholder =
+    lower.includes("what would you like to create") ||
+    lower.includes("describe your image request clearly");
+  const looksLikeMojibakePlaceholder =
+    questionMarks >= 12 && questionMarks / Math.max(1, visibleChars) > 0.3;
+
+  if (looksLikeHolderPlaceholder || looksLikeMojibakePlaceholder) {
+    throw new Error(
+      "The prompt looks like Cowart's AI holder placeholder text or mojibake (for example 'What would you like to create?' / many question marks). Use the user's actual image request, expand it into a clear visual prompt, translate Chinese requests to English unless exact visible Chinese text is required, and call generate_seedream_image again."
+    );
+  }
+}
+
 // Resolve an anchor shape's existing local image file (for image-to-image).
 function anchorImageFile(store, anchorShape, canvasDir, pageId) {
   const assetId = anchorShape?.props?.assetId;
@@ -1036,6 +1054,7 @@ async function insertImageIntoCanvas(args, snapshotCtx) {
 async function generateSeedreamImage(args = {}) {
   const prompt = nonEmptyString(args.prompt);
   if (!prompt) throw new Error("prompt is required.");
+  assertUsablePrompt(prompt);
 
   const provider = resolveProvider(args);
   const apiKey = resolveImageApiKey(args, provider);
@@ -1329,7 +1348,11 @@ function toolDefinitions() {
       inputSchema: {
         type: "object",
         properties: {
-          prompt: { type: "string", description: "Image prompt. Include exact in-image text when the asset needs visible copy." },
+          prompt: {
+            type: "string",
+            description:
+              "Image prompt. Prefer a clear English prompt for provider compatibility; include exact in-image text verbatim only when the asset needs visible copy.",
+          },
           provider: { type: "string", enum: ["doubao", "openai"], description: "Image provider. Defaults to COWART_IMAGE_PROVIDER env or doubao (Volcengine Ark Seedream)." },
           model: { type: "string", description: "Model id. Defaults to COWART_IMAGE_MODEL env, then doubao-seedream-5-0-260128 (doubao) or gpt-image-2 (openai)." },
           baseUrl: { type: "string", description: "Image API base URL. Defaults to COWART_IMAGE_BASE_URL env, then the Volcengine Ark or g-aisc default for the provider." },

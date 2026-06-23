@@ -56,8 +56,17 @@ Any of `provider`, `model`, `baseUrl`, `apiKey` can also be passed per call as t
 Users are often brief ("画只猫", "换个背景"). Expand that into a complete, concrete
 prompt using the conversation and the canvas: subject, composition, setting, style,
 lighting, color, mood, and any **in-image text quoted verbatim**. Keep every explicit
-detail the user gave; fill in only what is missing. After acting, say what you did and
-offer the next concrete step.
+detail the user gave; fill in only what is missing. For the `prompt` argument passed to
+`generate_seedream_image`, prefer **English** for provider and Windows compatibility
+(translate the user's Chinese brief into English). Only keep Chinese in the prompt when
+the user explicitly wants visible Chinese text inside the generated image, and quote that
+visible text verbatim. After acting, say what you did and offer the next concrete step.
+
+Never use the Cowart holder's default placeholder text as the image prompt. Placeholder
+text includes phrases such as `What would you like to create?`, `Describe your image
+request clearly!`, or mojibake/question-mark blocks (`????`). If you only see placeholder
+text and cannot find the user's real image request in the conversation, ask the user for
+the image description instead of calling the tool.
 
 ## Fill a selected AI 图片 holder (default)
 
