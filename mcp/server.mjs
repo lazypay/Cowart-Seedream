@@ -639,7 +639,21 @@ function resolveCanvasDir(args = {}) {
   if (envCanvasDir) return pathResolve(envCanvasDir);
   const envProjectDir = nonEmptyString(process.env.COWART_PROJECT_DIR);
   if (envProjectDir) return join(pathResolve(envProjectDir), "canvas");
+  const fallbackCanvasDir = nonEmptyString(args.fallbackCanvasDir);
+  if (fallbackCanvasDir) return pathResolve(fallbackCanvasDir);
   return join(process.cwd(), "canvas");
+}
+
+function inferCanvasDirFromCanvasPayload(payload) {
+  const value = nonEmptyString(payload?.path);
+  if (!value) return null;
+
+  // Cowart's per-page storage currently reports the pages directory, e.g.
+  // "C:\\...\\canvas \\pages" on Windows. Strip the trailing "pages" segment
+  // (and any accidental whitespace before the separator) to recover canvas/.
+  const withoutPages = value.replace(/\s*[\\/]+pages\s*$/i, "");
+  const candidate = nonEmptyString(withoutPages) || value;
+  return pathResolve(candidate.trim());
 }
 
 function resolveSelectionFile(args = {}) {
@@ -733,7 +747,7 @@ async function loadCanvasSnapshot(args) {
   if (!snapshot || typeof snapshot !== "object" || !snapshot.schema || !snapshot.store) {
     throw new Error(`Expected a Cowart canvas snapshot from ${cowartUrl}/api/canvas`);
   }
-  return { cowartUrl, snapshot };
+  return { cowartUrl, snapshot, payload, fallbackCanvasDir: inferCanvasDirFromCanvasPayload(payload) };
 }
 
 async function saveCanvasSnapshot(cowartUrl, snapshot) {
@@ -949,8 +963,9 @@ async function insertImageIntoCanvas(args, snapshotCtx) {
   const sourceStat = await stat(sourceImagePath);
   if (!sourceStat.isFile()) throw new Error(`imagePath is not a file: ${sourceImagePath}`);
 
-  const { cowartUrl, snapshot } = snapshotCtx;
+  const { cowartUrl, snapshot, fallbackCanvasDir } = snapshotCtx;
   const store = snapshot.store;
+  const canvasArgs = { ...args, fallbackCanvasDir };
   const selection = args._selection ?? (await readSelectionState(args)).selection;
   const viewState = args._viewState ?? (await readViewState(args));
 
@@ -985,7 +1000,7 @@ async function insertImageIntoCanvas(args, snapshotCtx) {
   const placement = ["right", "left", "below"].includes(args.placement) ? args.placement : "right";
   const bounds = choosePlacement({ store, pageId, parentId, anchorShape, width, height, margin, placement });
 
-  const canvasDir = resolveCanvasDir(args);
+  const canvasDir = resolveCanvasDir(canvasArgs);
   const assetsDir = join(canvasDir, "pages", pageDirName(pageId), "assets");
   if (!isSafeChildPath(canvasDir, assetsDir)) throw new Error(`Unsafe page assets directory: ${assetsDir}`);
 
@@ -1062,10 +1077,12 @@ async function generateSeedreamImage(args = {}) {
   const model = resolveImageModel(args, provider);
   const watermark = args.watermark === true;
 
-  const { cowartUrl, snapshot } = await loadCanvasSnapshot(args);
+  const canvasCtx = await loadCanvasSnapshot(args);
+  const { cowartUrl, snapshot, fallbackCanvasDir } = canvasCtx;
+  const canvasArgs = { ...args, fallbackCanvasDir };
   const store = snapshot.store;
-  const { selection } = await readSelectionState(args);
-  const viewState = await readViewState(args);
+  const { selection } = await readSelectionState(canvasArgs);
+  const viewState = await readViewState(canvasArgs);
 
   const targetId = nonEmptyString(args.holderShapeId) || nonEmptyString(args.anchorShapeId) || resolveSelectedHolderId(selection);
   const requestedPlacement = nonEmptyString(args.placement);
@@ -1131,7 +1148,7 @@ async function generateSeedreamImage(args = {}) {
     sourceImage = { url: explicitSourceUrl };
     usedImageToImage = true;
   } else if (args.editSourceFromAnchor === true && holder) {
-    const sourceFile = anchorImageFile(store, holder, resolveCanvasDir(args), pageId);
+    const sourceFile = anchorImageFile(store, holder, resolveCanvasDir(canvasArgs), pageId);
     if (sourceFile) {
       try {
         const fileStat = await stat(sourceFile);
@@ -1194,7 +1211,7 @@ async function generateSeedreamImage(args = {}) {
           _selection: selection,
           _viewState: viewState,
         },
-        { cowartUrl, snapshot }
+        canvasCtx
       );
       return {
         mode: targetId ? "beside" : "standalone",
@@ -1240,7 +1257,7 @@ async function generateSeedreamImage(args = {}) {
     shapeRotation = finiteNumber(holder.rotation, 0);
   }
 
-  const canvasDir = resolveCanvasDir(args);
+  const canvasDir = resolveCanvasDir(canvasArgs);
   const assetsDir = join(canvasDir, "pages", pageDirName(pageId), "assets");
   if (!isSafeChildPath(canvasDir, assetsDir)) throw new Error(`Unsafe page assets directory: ${assetsDir}`);
 
