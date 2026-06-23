@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cowart_seedream_mcp": {
+      "command": "node",
+      "args": [
+        "./mcp/server.mjs"
+      ],
+      "cwd": "."
+    }
+  }
+}

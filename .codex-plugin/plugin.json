@@ -1,0 +1,28 @@
+{
+  "name": "cowart-seedream",
+  "version": "0.1.0",
+  "description": "Bring-your-own-key image generation for the Cowart canvas. Generate and place images through Doubao Seedream (Volcengine Ark) or any OpenAI-compatible image API, with no built-in image quota.",
+  "author": {
+    "name": "Local"
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Cowart Seedream",
+    "shortDescription": "BYOK image generation for the Cowart canvas (Doubao Seedream / OpenAI-compatible).",
+    "longDescription": "A standalone companion plugin for Cowart. It generates images through your own image API - Doubao Seedream on Volcengine Ark by default, or any OpenAI-compatible endpoint - and inserts them into the running Cowart canvas through Cowart's local HTTP API. It never modifies the Cowart project, has no extra npm dependencies, and lets you keep filling AI image holders and running annotation edits even when the built-in image model has no quota.",
+    "developerName": "Local",
+    "category": "Productivity",
+    "capabilities": [
+      "Doubao Seedream (Volcengine Ark) image generation",
+      "OpenAI-compatible image generation and image-to-image",
+      "Holder-ratio sizing with no crop or distortion",
+      "Fills Cowart AI image holders and places annotation edits",
+      "No built-in image-generation quota required"
+    ],
+    "defaultPrompt": [
+      "Generate an image into the selected Cowart AI image holder with my own API.",
+      "Use Doubao Seedream to fill the selected Cowart holder."
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "cowart-seedream",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "BYOK image generation companion for the Cowart canvas (Doubao Seedream / OpenAI-compatible). Zero runtime dependencies.",
+  "scripts": {
+    "mcp": "node ./mcp/server.mjs"
+  }
+}

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Cowart Seedream Image"
+  short_description: "Generate Cowart images with your own API (Doubao Seedream / OpenAI-compatible), no built-in quota"
+  default_prompt: "Use $cowart-seedream:cowart-seedream-image to generate an image into the selected Cowart AI image holder with my own API."
+
+policy:
+  allow_implicit_invocation: true
