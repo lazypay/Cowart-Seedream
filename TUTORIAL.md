@@ -217,6 +217,9 @@ setx COWART_IMAGE_MODEL "gpt-image-2"
 **Q：换成 DeepSeek 后生成了满屏问号 / “Describe your image request clearly!”？**
 这是某些模型或 Windows 工具链把中文提示词变成 `????` 后，豆包照着错误提示词生成了占位图。新版插件会自动拦截这类 prompt，不再浪费生图调用。最佳实践是：你可以用中文和 Codex 说需求，但让 agent 调工具时把最终 `prompt` 翻译/扩写成英文；只有图片里确实要出现中文文字时，才把那段中文原文放进 prompt。
 
+**Q：换成 Mimo/其他模型后，“改图”变成了全新文生图，人物和背景都变了？**
+这是 agent 漏传 `editSourceFromAnchor: true`，导致工具按纯文生图执行。新版插件对 `right`/`left`/`below` 这类放在原图旁边的操作做了兜底：如果锚点本身是图片，会默认把锚点图作为参考图做图生图，除非明确传 `editSourceFromAnchor:false`。为了更稳，你仍然可以在提示里说：“请使用图生图，保留原图人物身份、构图和背景，只改标注部分，放在右边。”
+
 **Q：生成的图片存在哪？**
 和 cowart 一样，存在你当前项目目录下：`canvas/pages/<页面>/assets/`，文件名带时间戳，不会覆盖旧图。
 

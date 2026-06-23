@@ -99,6 +99,12 @@ keep the original and its annotations, add the revised image next to it.
 { "prompt": "<what the result should be>", "placement": "right", "editSourceFromAnchor": true }
 ```
 
+For beside placement, when the anchor is an image, the tool defaults to image-to-image
+from that anchor even if `editSourceFromAnchor` is omitted. Still pass
+`editSourceFromAnchor: true` explicitly for annotation edits and revisions to make the
+intent unmistakable. Do not use pure text-to-image for edits to an existing picture unless
+the user explicitly asks for a completely new reinterpretation.
+
 ## Standalone image on the current page
 
 With nothing selected, the tool places a standalone image on the current page. Give an
@@ -111,8 +117,9 @@ With nothing selected, the tool places a standalone image on the current page. G
 ## Image-to-image
 
 - `editSourceFromAnchor: true` uses the selected holder/anchor's existing local image as
-  the source (best for "tweak this image" / annotation edits). Falls back to
-  text-to-image if the anchor has no local image or the edit call fails.
+  the source (best for "tweak this image" / annotation edits). For beside placements,
+  this is the default when the anchor is already an image. Falls back to text-to-image if
+  the anchor has no local image or the edit call fails.
 - `sourceImagePath: "<absolute local path>"` uses a user-provided file (e.g. an exported
   annotation screenshot) as the source.
 - `sourceImageUrl: "<url>"` uses a remote image as the source.

@@ -1147,7 +1147,11 @@ async function generateSeedreamImage(args = {}) {
   } else if (explicitSourceUrl) {
     sourceImage = { url: explicitSourceUrl };
     usedImageToImage = true;
-  } else if (args.editSourceFromAnchor === true && holder) {
+  } else if (
+    holder &&
+    (args.editSourceFromAnchor === true ||
+      (args.editSourceFromAnchor !== false && placement !== "into" && holder.type === "image"))
+  ) {
     const sourceFile = anchorImageFile(store, holder, resolveCanvasDir(canvasArgs), pageId);
     if (sourceFile) {
       try {
@@ -1361,7 +1365,7 @@ function toolDefinitions() {
       name: TOOL_GENERATE,
       title: "Generate Cowart Seedream Image",
       description:
-        "Generate an AI image through your own image API (Doubao Seedream on Volcengine Ark by default, or any OpenAI-compatible endpoint) and place it on the running Cowart canvas. No built-in image quota is used. With placement 'into' (default when an AI image holder is selected) it sizes to the holder ratio and fills the holder, by default replacing the frame with a standalone image at the same position (pass keepHolder:true to keep the frame). With placement 'right'/'left'/'below' it sizes to the anchor ratio and places a new image beside it without changing the anchor (use for annotation-driven edits). With no selection it places a standalone image on the current page. Set editSourceFromAnchor:true (or sourceImagePath/sourceImageUrl) for image-to-image.",
+        "Generate an AI image through your own image API (Doubao Seedream on Volcengine Ark by default, or any OpenAI-compatible endpoint) and place it on the running Cowart canvas. No built-in image quota is used. With placement 'into' (default when an AI image holder is selected) it sizes to the holder ratio and fills the holder, by default replacing the frame with a standalone image at the same position (pass keepHolder:true to keep the frame). With placement 'right'/'left'/'below' it sizes to the anchor ratio and places a new image beside it without changing the anchor (use for annotation-driven edits); when the anchor is an image, it defaults to image-to-image from that anchor unless editSourceFromAnchor:false is passed. With no selection it places a standalone image on the current page. Pass sourceImagePath/sourceImageUrl for an explicit image-to-image source.",
       inputSchema: {
         type: "object",
         properties: {
@@ -1385,7 +1389,7 @@ function toolDefinitions() {
           aspectRatio: { type: "number", description: "Target width/height ratio used for sizing when there is no selected holder. Defaults to 1." },
           targetPx: { type: "number", description: "Target total pixels for the computed size. Clamped to the provider range." },
           watermark: { type: "boolean", description: "Doubao only: add the provider watermark. Defaults to false." },
-          editSourceFromAnchor: { type: "boolean", description: "Image-to-image using the holder/anchor's existing local image as the source. Falls back to text-to-image if unavailable. Defaults to false." },
+          editSourceFromAnchor: { type: "boolean", description: "Image-to-image using the holder/anchor's existing local image as the source. For beside placements (right/left/below), this defaults to true when the anchor is an image; pass false to force text-to-image. Falls back to text-to-image if unavailable." },
           sourceImagePath: { type: "string", description: "Absolute local image path to use as the image-to-image source (e.g. a user-provided screenshot)." },
           sourceImageUrl: { type: "string", description: "Remote image URL to use as the image-to-image source." },
           keepHolder: { type: "boolean", description: "For placement 'into': keep the AI image frame and place the image inside it. Defaults to false (replace the frame with a standalone image so it moves and resizes freely)." },
