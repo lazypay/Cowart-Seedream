@@ -631,6 +631,13 @@ async function generateBuffer({ provider, apiKey, baseUrl, model, prompt, size, 
  * Cowart canvas layer (talks to the running Cowart HTTP service + data dir)
  * ------------------------------------------------------------------ */
 function resolveCanvasDir(args = {}) {
+  // When we already loaded the running Cowart service, its canvas directory is
+  // authoritative for asset writes. Agent-supplied projectDir often points at the
+  // current Codex conversation folder, which may differ from the project bound to
+  // the already-open canvas at http://127.0.0.1:43217.
+  const fallbackCanvasDir = nonEmptyString(args.fallbackCanvasDir);
+  if (fallbackCanvasDir) return pathResolve(fallbackCanvasDir);
+
   const explicitCanvasDir = nonEmptyString(args.canvasDir);
   if (explicitCanvasDir) return pathResolve(explicitCanvasDir);
   const explicitProjectDir = nonEmptyString(args.projectDir);
@@ -639,8 +646,6 @@ function resolveCanvasDir(args = {}) {
   if (envCanvasDir) return pathResolve(envCanvasDir);
   const envProjectDir = nonEmptyString(process.env.COWART_PROJECT_DIR);
   if (envProjectDir) return join(pathResolve(envProjectDir), "canvas");
-  const fallbackCanvasDir = nonEmptyString(args.fallbackCanvasDir);
-  if (fallbackCanvasDir) return pathResolve(fallbackCanvasDir);
   return join(process.cwd(), "canvas");
 }
 
